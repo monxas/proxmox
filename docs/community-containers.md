@@ -47,7 +47,3 @@ Linux Containers, also known as LXC or Lexi, can be launched on any Linux distri
 
 1. Access the application in your web browser using the container's IP address.
 2. Verify that the application is running successfully.
-
-And that's it! Now you know how to create containers within Proxmox. It's easy to use, and containers are awesome. At this point, I challenge you to create additional containers for whatever applications you want.
-
-Happy containerizing!
