@@ -1,5 +1,5 @@
-# LearnLinuxTV: Creating Container Templates in Proxmox
-
+# Creating Container Templates in Proxmox
+link to video:  [LearnLinuxTV](https://www.youtube.com/watch?v=J29onrRqE_I&list=PLT98CRl2KxKHnlbYhtABg6cF50bYa8Ulo&index=9)
 ## Introduction
 This guide will show you how to create templates for your containers in Proxmox. Creating templates can save you time when deploying multiple containers with similar configurations.
 
