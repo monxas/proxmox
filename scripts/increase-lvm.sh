@@ -30,7 +30,7 @@ read -p "Enter the size in GB to increase the logical volume: " size_gb
 partition_number=$(lsblk -o NAME,TYPE,MOUNTPOINT | grep -w "lvm" | head -n 1 | cut -d"p" -f2)
 
 # Set the partition type (Linux LVM)
-partition_type="30"
+partition_type="8e"
 
 # Edit partitions with fdisk, change device id as needed
 (
@@ -42,7 +42,6 @@ echo "p"
 echo "$partition_number"
 echo ""
 echo ""
-echo "n"
 echo "t"
 echo "$partition_number"
 echo "$partition_type"
