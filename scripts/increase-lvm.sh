@@ -29,36 +29,33 @@ read -p "Enter the size in GB to increase the logical volume: " size_gb
 # Get the partition number
 partition_number=$(lsblk -o NAME,TYPE,MOUNTPOINT | grep -w "lvm" | head -n 1 | cut -d"p" -f2)
 
-# Set the partition type (Linux LVM)
-partition_type="8e"
-
-# Edit partitions with fdisk, change device id as needed
-(
-echo "p"
-echo "d"
-echo "$partition_number"
-echo "n"
-echo "p"
-echo "$partition_number"
-echo ""
-echo ""
-echo "t"
-echo "$partition_number"
-echo "$partition_type"
-echo "w"
-) | sudo fdisk $device
+# Edit partitions with fdisk
+{
+    echo "p"
+    echo "d"
+    echo "$partition_number"
+    echo "n"
+    echo "p"
+    echo "$partition_number"
+    echo ""
+    echo ""
+    echo "t"
+    echo "$partition_number"
+    echo "30"
+    echo "w"
+} | fdisk $device
 
 # List disks and partitions, noting the size increase
 fdisk -l
 
 # Extend the existing physical volume
-pvresize ${device}${partition_number}
+pvresize "${device}${partition_number}"
 
-# Extend the selected logical volume with the desired size
+# Extend the logical volume to the desired size
 lvresize -L +${size_gb}G $lv_root
 
 # Extend the underlying file system
 resize2fs $lv_root
 
-# List logical volumes, noting the increased size
+# List logical volumes, noting the size increase
 lvdisplay
