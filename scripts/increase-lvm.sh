@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 
 # Function to list available devices
 function list_devices() {
