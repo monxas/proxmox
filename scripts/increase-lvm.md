@@ -1,12 +1,29 @@
 #!/bin/bash
 set -e
 
+# Function to display available devices
+list_devices() {
+  lsblk -d -o NAME,SIZE,TYPE | grep "disk"
+}
+
+# Function to display available logical volumes
+list_logical_volumes() {
+  lvdisplay --columns --separator ',' --noheading -o lv_name,vg_name | awk -F ',' '{print "/dev/"$2"/"$1}'
+}
+
+# Prompt the user to select a device
+echo "Available devices:"
+list_devices
+read -p "Enter the device to resize (e.g., /dev/sda): " device
+
+# Prompt the user to select a logical volume
+echo "Available logical volumes:"
+list_logical_volumes
+read -p "Enter the root logical volume path (e.g., /dev/ubuntu-vg/ubuntu-lv): " lv_root
+
 # Variables
-device="/dev/sda"
 partition_number="3"
 partition_type="30"
-lv_root="/dev/ubuntu-vg/ubuntu-lv"
-lv_data="/dev/ubuntu-vg/ubuntu-lv"
 
 # Prompt the user for the size to increase in GB
 read -p "Enter the size to increase in GB: " increase_size
@@ -46,17 +63,11 @@ fdisk -l
 # Extend the existing physical volume
 pvresize ${device}${partition_number}
 
-# Extend the pve-root logical volume with the user-specified size
+# Extend the root logical volume with the user-specified size
 lvresize -L +${increase_size}G $lv_root
 
 # Extend the underlying file system
 resize2fs $lv_root
 
 # List logical volumes, noting root is now larger by the specified size
-lvdisplay
-
-# Extend the data to 100% available free space
-lvextend -l +100%FREE $lv_data
-
-# List logical volumes, noting data is now over 35GB
 lvdisplay
