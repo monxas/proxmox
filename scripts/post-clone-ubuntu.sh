@@ -46,8 +46,7 @@ check_command "Failed to upgrade packages."
 
 # Reset passwords
 while true; do
-  echo "Do you want to reset the current user password? (y/n)"
-  read reset_password
+  read -p "Do you want to reset the current user password? (y/n)" -e reset_password
 
   if [[ "$reset_password" =~ ^[yYnN]$ ]]; then
     break
@@ -55,6 +54,7 @@ while true; do
     echo "Invalid input. Please enter 'y' or 'n'."
   fi
 done
+
 
 if [[ "$reset_password" =~ ^[yY]$ ]]; then
   echo "Resetting current user password..."
