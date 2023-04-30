@@ -1,5 +1,6 @@
 #!/bin/bash
-
+# to run:
+# curl -sSL https://github.com/monxas/proxmox/blob/develop/scripts/post-clone-ubuntu.sh | sudo bash
 # Function to check if the command executed successfully
 check_command() {
   if [ $? -ne 0 ]; then
