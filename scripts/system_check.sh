@@ -102,7 +102,8 @@ menu_options() {
   echo "5. Install Docker"
   echo "6. Install Docker Compose"
   echo "7. Install QEMU Guest Agent"
-  echo "8. Exit"
+  echo "8. Install Dockge"
+  echo "9. Exit"
 }
 
 # Install updates
@@ -162,6 +163,15 @@ install_qemu_guest_agent() {
   echo "Installing QEMU Guest Agent..."
   sudo apt-get update
   sudo apt-get install qemu-guest-agent -y
+}
+
+# Install Dockge
+install_dockge() {
+  echo "Installing Dockge..."
+  sudo mkdir -p /opt/stacks /opt/dockge
+  cd /opt/dockge
+  sudo curl https://raw.githubusercontent.com/louislam/dockge/master/compose.yaml --output compose.yaml
+  sudo docker compose up -d
 }
 
 # Main script
@@ -229,6 +239,9 @@ main() {
         fi
         ;;
       8)
+        install_dockge
+        ;;
+      9)
         echo "Exiting..."
         break
         ;;
