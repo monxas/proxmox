@@ -55,6 +55,33 @@ check_docker() {
   fi
 }
 
+# Check if Docker Compose is installed
+check_docker_compose() {
+  echo "Checking Docker Compose status..."
+  if command -v docker-compose >/dev/null 2>&1; then
+    docker_compose_installed=true
+    echo "Docker Compose is installed."
+  elif docker compose version >/dev/null 2>&1; then
+    docker_compose_installed=true
+    echo "Docker Compose v2 is installed."
+  else
+    docker_compose_installed=false
+    echo "Docker Compose is not installed."
+  fi
+}
+
+# Check if QEMU Guest Agent is installed
+check_qemu_guest_agent() {
+  echo "Checking QEMU Guest Agent status..."
+  if dpkg -l | grep -qw qemu-guest-agent; then
+    qemu_guest_agent_installed=true
+    echo "QEMU Guest Agent is installed."
+  else
+    qemu_guest_agent_installed=false
+    echo "QEMU Guest Agent is not installed."
+  fi
+}
+
 # Run checks and present report
 run_checks() {
   check_updates
@@ -62,6 +89,8 @@ run_checks() {
   check_user
   check_disk_space
   check_docker
+  check_docker_compose
+  check_qemu_guest_agent
 }
 
 # Menu options
@@ -71,7 +100,9 @@ menu_options() {
   echo "3. Create user 'monxas'"
   echo "4. Allocate free disk space"
   echo "5. Install Docker"
-  echo "6. Exit"
+  echo "6. Install Docker Compose"
+  echo "7. Install QEMU Guest Agent"
+  echo "8. Exit"
 }
 
 # Install updates
@@ -118,6 +149,21 @@ install_docker() {
   sudo sh install-docker.sh
 }
 
+# Install Docker Compose
+install_docker_compose() {
+  echo "Installing Docker Compose..."
+  sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')" -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
+  docker-compose --version
+}
+
+# Install QEMU Guest Agent
+install_qemu_guest_agent() {
+  echo "Installing QEMU Guest Agent..."
+  sudo apt-get update
+  sudo apt-get install qemu-guest-agent -y
+}
+
 # Main script
 main() {
   run_checks
@@ -129,6 +175,8 @@ main() {
   echo "User 'monxas' exists: $user_exists"
   echo "Free disk space: $free_space"
   echo "Docker installed: $docker_installed"
+  echo "Docker Compose installed: $docker_compose_installed"
+  echo "QEMU Guest Agent installed: $qemu_guest_agent_installed"
   echo "-----------------"
 
   while true; do
@@ -167,6 +215,20 @@ main() {
         fi
         ;;
       6)
+        if [ "$docker_compose_installed" = false ]; then
+          install_docker_compose
+        else
+          echo "Docker Compose is already installed."
+        fi
+        ;;
+      7)
+        if [ "$qemu_guest_agent_installed" = false ]; then
+          install_qemu_guest_agent
+        else
+          echo "QEMU Guest Agent is already installed."
+        fi
+        ;;
+      8)
         echo "Exiting..."
         break
         ;;
