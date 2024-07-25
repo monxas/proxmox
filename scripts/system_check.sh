@@ -108,15 +108,15 @@ run_checks() {
 
 # Menu options
 menu_options() {
-  echo "1. Install updates"
-  echo "2. Install and start SSH"
-  echo "3. Create user 'monxas'"
-  echo "4. Allocate free disk space"
-  echo "5. Install Docker"
-  echo "6. Install Docker Compose"
-  echo "7. Install QEMU Guest Agent"
+  echo "1. Install updates $([ "$updates_available" = false ] && echo "(Done)" || echo "(Pending)")"
+  echo "2. Install and start SSH $([ "$ssh_installed" = true ] && echo "(Done)" || echo "(Pending)")"
+  echo "3. Create user 'monxas' $([ "$user_exists" = true ] && echo "(Done)" || echo "(Pending)")"
+  echo "4. Allocate free disk space $([ "$free_space" = "0" ] && echo "(Pending)" || echo "(Done)")"
+  echo "5. Install Docker $([ "$docker_installed" = true ] && echo "(Done)" || echo "(Pending)")"
+  echo "6. Install Docker Compose $([ "$docker_compose_installed" = true ] && echo "(Done)" || echo "(Pending)")"
+  echo "7. Install QEMU Guest Agent $([ "$qemu_guest_agent_installed" = true ] && echo "(Done)" || echo "(Pending)")"
   echo "8. Install Dockge"
-  echo "9. Mount NFS share"
+  echo "9. Mount NFS share $([ "$nfs_mounted" = true ] && echo "(Done)" || echo "(Pending)")"
   echo "10. Exit"
 }
 
