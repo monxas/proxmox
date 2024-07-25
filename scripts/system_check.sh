@@ -95,9 +95,18 @@ create_user() {
   sudo usermod -aG sudo monxas
 }
 
-# Allocate free disk space (dummy function, replace with actual implementation)
+# Allocate free disk space
 allocate_disk_space() {
-  echo "Allocating free disk space... (dummy function)"
+  echo "Checking if cloud-guest-utils is installed..."
+  if ! dpkg -l | grep -q cloud-guest-utils; then
+    echo "Installing cloud-guest-utils..."
+    sudo apt-get update
+    sudo apt-get install cloud-guest-utils -y
+  fi
+
+  echo "Allocating free disk space..."
+  sudo growpart /dev/sda 1
+  sudo resize2fs /dev/sda1
 }
 
 # Install Docker
