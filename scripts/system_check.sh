@@ -82,6 +82,18 @@ check_qemu_guest_agent() {
   fi
 }
 
+# Check if NFS share is mounted
+check_nfs_mount() {
+  echo "Checking NFS mount..."
+  if mountpoint -q /mnt/nfs_media; then
+    nfs_mounted=true
+    echo "NFS share is mounted."
+  else
+    nfs_mounted=false
+    echo "NFS share is not mounted."
+  fi
+}
+
 # Run checks and present report
 run_checks() {
   check_updates
@@ -91,6 +103,7 @@ run_checks() {
   check_docker
   check_docker_compose
   check_qemu_guest_agent
+  check_nfs_mount
 }
 
 # Menu options
@@ -103,7 +116,8 @@ menu_options() {
   echo "6. Install Docker Compose"
   echo "7. Install QEMU Guest Agent"
   echo "8. Install Dockge"
-  echo "9. Exit"
+  echo "9. Mount NFS share"
+  echo "10. Exit"
 }
 
 # Install updates
@@ -174,6 +188,22 @@ install_dockge() {
   sudo docker compose up -d
 }
 
+# Mount NFS share
+mount_nfs() {
+  echo "Setting up NFS share..."
+  sudo apt update && sudo apt install -y nfs-common
+  sudo mkdir -p /mnt/nfs_media
+  grep -qxF '192.168.0.237:/Volume1/Media /mnt/nfs_media nfs rw,relatime,vers=4.1,nofail 0 0' /etc/fstab || echo '192.168.0.237:/Volume1/Media /mnt/nfs_media nfs rw,relatime,vers=4.1,nofail 0 0' | sudo tee -a /etc/fstab
+  sudo systemctl daemon-reload
+  sudo mount -a
+
+  if mountpoint -q /mnt/nfs_media; then
+    echo "NFS setup complete and mount successful."
+  else
+    echo "NFS setup complete but mount failed."
+  fi
+}
+
 # Main script
 main() {
   run_checks
@@ -187,6 +217,7 @@ main() {
   echo "Docker installed: $docker_installed"
   echo "Docker Compose installed: $docker_compose_installed"
   echo "QEMU Guest Agent installed: $qemu_guest_agent_installed"
+  echo "NFS share mounted: $nfs_mounted"
   echo "-----------------"
 
   while true; do
@@ -242,6 +273,13 @@ main() {
         install_dockge
         ;;
       9)
+        if [ "$nfs_mounted" = false ]; then
+          mount_nfs
+        else
+          echo "NFS share is already mounted."
+        fi
+        ;;
+      10)
         echo "Exiting..."
         break
         ;;
