@@ -1,7 +1,13 @@
+version: '3.8'
+
+networks:
+  backend:
+  frontend:
+
 services:
   nginx:
     image: nginx:latest
-    container_name: nginx
+    container_name: webserver-nginx
     volumes:
       - /home/monxas/appdata/nginx/conf.d:/etc/nginx/conf.d
     environment:
@@ -10,11 +16,23 @@ services:
       - TZ=Europe/Madrid
     ports:
       - "80:80"
+    networks:
+      - frontend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
+    container_name: media-radarr
     environment:
       - PUID=1000
       - PGID=1000
@@ -24,11 +42,18 @@ services:
       - /mnt/nfs_media:/data
     ports:
       - "7878:7878"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
+    container_name: media-sonarr
     environment:
       - PUID=1000
       - PGID=1000
@@ -38,11 +63,18 @@ services:
       - /mnt/nfs_media:/data
     ports:
       - "8989:8989"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
-    container_name: lidarr
+    container_name: media-lidarr
     environment:
       - PUID=1000
       - PGID=1000
@@ -52,26 +84,40 @@ services:
       - /mnt/nfs_media:/data
     ports:
       - "8686:8686"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
-    container_name: bazarr
+    container_name: media-bazarr
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
       - /home/monxas/appdata/bazarr:/config
-      - /mnt/nfs_media/movies:/movies #optional
-      - /mnt/nfs_media/tvshows:/tv #optional
+      - /mnt/nfs_media/movies:/movies
+      - /mnt/nfs_media/tvshows:/tv
     ports:
       - "6767:6767"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   readarr:
     image: lscr.io/linuxserver/readarr:develop
-    container_name: readarr
+    container_name: media-readarr
     environment:
       - PUID=1000
       - PGID=1000
@@ -81,11 +127,18 @@ services:
       - /mnt/nfs_media:/data
     ports:
       - "8787:8787"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   sonarr_monitor:
     image: monxas/putio-torrent-monitor:latest
-    container_name: sonarr_monitor
+    container_name: monitor-sonarr
     environment:
       - PARENT_ID=1244743180
       - PUTIO_OAUTH_TOKEN=I5RCKVANJ6HJME4TPLKR
@@ -94,11 +147,13 @@ services:
       - TZ=Europe/Madrid
     volumes:
       - /mnt/nfs_media/torrents/sonarr:/torrents
+    networks:
+      - backend
     restart: unless-stopped
 
   radarr_monitor:
     image: monxas/putio-torrent-monitor:latest
-    container_name: radarr_monitor
+    container_name: monitor-radarr
     environment:
       - PARENT_ID=1244692884
       - PUTIO_OAUTH_TOKEN=I5RCKVANJ6HJME4TPLKR
@@ -107,11 +162,13 @@ services:
       - TZ=Europe/Madrid
     volumes:
       - /mnt/nfs_media/torrents/radarr:/torrents
+    networks:
+      - backend
     restart: unless-stopped
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
-    container_name: jellyfin
+    container_name: media-jellyfin
     environment:
       - PUID=1000
       - PGID=1000
@@ -122,29 +179,43 @@ services:
     ports:
       - "8096:8096"
       - "8920:8920"
+    networks:
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   jellystat-db:
-      image: postgres:15.2
-      container_name: jellystat-db
-      environment:
-        POSTGRES_DB: 'jfstat'
-        POSTGRES_USER: 'postgres'
-        POSTGRES_PASSWORD: 'mypassword'  # Consider using Docker secrets or an env file for production
-        TZ: 'Europe/Madrid'  # Setting timezone for consistency, though not used by PostgreSQL image
-      volumes:
-        - /home/monxas/appdata/jellystat-db:/var/lib/postgresql/data
-      restart: always
+    image: postgres:15.2
+    container_name: db-jellystat
+    environment:
+      POSTGRES_DB: 'jfstat'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'mypassword'
+      TZ: 'Europe/Madrid'
+    volumes:
+      - /home/monxas/appdata/jellystat-db:/var/lib/postgresql/data
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    restart: always
 
   jellystat:
     image: cyfershepard/jellystat:latest
-    container_name: jellystat
+    container_name: media-jellystat
     environment:
       POSTGRES_USER: 'postgres'
-      POSTGRES_PASSWORD: 'mypassword'  # Consider using Docker secrets or an env file for production
-      POSTGRES_IP: 'jellystat-db'
+      POSTGRES_PASSWORD: 'mypassword'
+      POSTGRES_IP: 'db-jellystat'
       POSTGRES_PORT: '5432'
-      JWT_SECRET: 'my-secret-jwt-key'  # Consider using Docker secrets or an env file for production
+      JWT_SECRET: 'my-secret-jwt-key'
       TZ: 'Europe/Madrid'
       PUID: '1000'
       PGID: '1000'
@@ -153,12 +224,19 @@ services:
     volumes:
       - /home/monxas/appdata/jellystat-backup:/app/backend/backup-data
     depends_on:
-      - jellystat-db
+      - db-jellystat
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+    container_name: media-jellyseerr
     environment:
       - LOG_LEVEL=debug
       - PUID=1000
@@ -168,11 +246,18 @@ services:
       - /home/monxas/appdata/jellyseerr:/app/config
     ports:
       - "5055:5055"
+    networks:
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
+    container_name: media-prowlarr
     environment:
       - PUID=1000
       - PGID=1000
@@ -181,11 +266,18 @@ services:
       - /home/monxas/appdata/prowlarr:/config
     ports:
       - "9696:9696"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
+    container_name: torrent-qbittorrent
     environment:
       - PUID=1000
       - PGID=1000
@@ -197,31 +289,52 @@ services:
       - /mnt/nfs_media:/data
     ports:
       - "8080:8080"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   dozzle:
-    container_name: dozzle
     image: amir20/dozzle:latest
+    container_name: monitoring-dozzle
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 9999:8080
+      - "9999:8080"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   watchtower:
-    container_name: watchtower
     image: containrrr/watchtower
+    container_name: update-watchtower
     environment:
       - WATCHTOWER_SCHEDULE=0 0 4 * * *
       - WATCHTOWER_CLEANUP=true
       - TZ=Europe/Madrid
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   heimdall:
     image: lscr.io/linuxserver/heimdall:latest
-    container_name: heimdall
+    container_name: dashboard-heimdall
     environment:
       - PUID=1000
       - PGID=1000
@@ -230,22 +343,36 @@ services:
       - /home/monxas/appdata/heimdall:/config
     ports:
       - "8084:80"
+    networks:
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   whatsupdocker:
     image: fmartinou/whats-up-docker
-    container_name: wud
+    container_name: monitoring-wud
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - WUD_REGISTRY_LSCR_TOKEN=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
     ports:
       - "3000:3000"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   stirling-pdf:
-    container_name: pdf
     image: frooodle/s-pdf
+    container_name: tool-stirling-pdf
     ports:
       - "9090:8080"
     volumes:
@@ -257,24 +384,41 @@ services:
       APP_HOME_DESCRIPTION: Your locally hosted one-stop-shop for all your PDF needs.
       APP_NAVBAR_NAME: Stirling PDF
       APP_ROOT_PATH: /
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   changedetection:
     image: lscr.io/linuxserver/changedetection.io:latest
-    container_name: changedetection
+    container_name: monitoring-changedetection
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - WEBDRIVER_URL=http://192.168.0.208:4444/wd/hub
+      - WEBDRIVER_URL=http://selenium:4444/wd/hub
     volumes:
       - /home/monxas/appdata/changedetection:/config
     ports:
       - "5000:5000"
+    networks:
+      - backend
+    depends_on:
+      - selenium
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   selenium:
     image: selenium/standalone-chrome:latest
+    container_name: tool-selenium
     environment:
       - DEBUG=browserless:*
       - MAX_CONCURRENT_SESSIONS=10
@@ -289,11 +433,23 @@ services:
       - "4444:4444"
       - "7900:7900"
     shm_size: 2g
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1G"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   snapdrop:
     image: lscr.io/linuxserver/snapdrop:latest
-    container_name: snapdrop
+    container_name: tool-snapdrop
     environment:
       - PUID=1000
       - PGID=1000
@@ -302,28 +458,41 @@ services:
       - /home/monxas/appdata/snapdrop:/config
     ports:
       - "8085:80"
+    networks:
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
   portainer:
     image: portainer/portainer-ce:latest
-    container_name: portainer
+    container_name: management-portainer
     ports:
       - "9000:9000"
       - "8000:8000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/monxas/appdata/portainer:/data
+    networks:
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: always
 
-
   ydl_api_ng:
-    container_name: ydl_api_ng
     image: totonyus/ydl_api_ng
+    container_name: api-ydl
     restart: unless-stopped
     depends_on:
       - ydl_api_ng_redis
     ports:
-      - 5011:80
+      - "5011:80"
     volumes:
       - /home/monxas/appdata/ydl_api_ng/params:/app/params
       - /home/monxas/appdata/ydl_api_ng/logs:/app/logs
@@ -336,19 +505,31 @@ services:
       - NB_WORKERS=5
       - LOG_LEVEL=error
       - DISABLE_REDIS=false
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   ydl_api_ng_redis:
-    container_name: ydl_api_ng_redis
     image: redis
+    container_name: db-ydl-api-ng
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
-
-
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   stash:
     image: stashapp/stash:latest
-    container_name: stash
+    container_name: tool-stash
     restart: unless-stopped
     ports:
       - "9990:9999"
@@ -371,10 +552,12 @@ services:
       - /home/monxas/appdata/stash/cache:/cache
       - /home/monxas/appdata/stash/blobs:/blobs
       - /home/monxas/appdata/stash/generated:/generated
+    networks:
+      - backend
 
   calibre-web:
     image: lscr.io/linuxserver/calibre-web:latest
-    container_name: calibre-web
+    container_name: tool-calibre-web
     environment:
       - PUID=1000
       - PGID=1000
@@ -385,32 +568,53 @@ services:
       - /home/monxas/appdata/calibre-web:/config
       - /mnt/nfs_media/calibre-library:/libros
     ports:
-      - 8083:8083
+      - "8083:8083"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: unless-stopped
 
   glance:
-    container_name: glance
     image: glanceapp/glance
+    container_name: tool-glance
     ports:
-      - 6080:8080
+      - "6080:8080"
     volumes:
       - /home/monxas/appdata/glance/glance.yml:/app/glance.yml
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: unless-stopped
 
   code-server:
     image: lscr.io/linuxserver/code-server:latest
-    container_name: code-server
+    container_name: dev-code-server
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - PASSWORD=alfagann #optional
-      - PROXY_DOMAIN=dev.monxas.casa #optional
-      - DEFAULT_WORKSPACE=/config/workspace #optional
+      - PASSWORD=alfagann
+      - PROXY_DOMAIN=dev.monxas.casa
+      - DEFAULT_WORKSPACE=/config/workspace
     volumes:
       - ./appdata/vscode:/config
     ports:
-      - 8443:8443
+      - "8443:8443"
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: unless-stopped
