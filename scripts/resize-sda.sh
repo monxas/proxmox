@@ -4,12 +4,17 @@
 set -e
 
 apt-get update
-apt-get install -y parted e2fsprogs
+apt-get install -y parted e2fsprogs cloud-guest-utils
 
-# Resize partition 1 to use 100% of the disk.
-echo "Yes" | parted -s /dev/sda resizepart 1 100%
+if ! command -v growpart >/dev/null; then
+  echo "growpart command not found. Aborting." >&2
+  exit 1
+fi
 
-# Expand the ext4 filesystem on /dev/sda1 to fill the new partition size.
+# Extend partition 1 to occupy all available space on /dev/sda
+growpart /dev/sda 1
+
+# Resize the ext4 filesystem on /dev/sda1 to fill the new partition size
 resize2fs /dev/sda1
 
 echo "New partition table (parted /dev/sda print):"
