@@ -4,16 +4,13 @@
 set -e
 
 apt-get update
-apt-get install -y parted
+apt-get install -y parted e2fsprogs
 
-{
-  echo "resizepart 1"
-  echo "Fix"
-  echo "1"
-  echo "Yes"
-  echo "-0"
-  echo "quit"
-} | parted /dev/sda
+# Resize partition 1 to use the entire disk (non-interactively)
+parted -s /dev/sda resizepart 1 100%
+
+# Expand the ext4 filesystem on /dev/sda1 to fill the new partition size
+resize2fs /dev/sda1
 
 echo "New partition table (parted /dev/sda print):"
 parted /dev/sda print
