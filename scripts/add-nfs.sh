@@ -1,3 +1,6 @@
+# one liner 
+# curl -sSL https://raw.githubusercontent.com/monxas/proxmox/develop/scripts/add-nfs.sh | bash
+
 #!/bin/bash
 
 # Predefined folder options
