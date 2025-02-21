@@ -1,14 +1,13 @@
 # one liner 
 # curl -sSL https://raw.githubusercontent.com/monxas/proxmox/develop/scripts/add-nfs.sh | bash
 #!/bin/bash
-exec </dev/tty
-exec >/dev/tty
 
 PS3="Enter your choice (number): "
 
 OPTIONS=("Media" "Matematico" "backup" "nexus" "Custom")
 
-echo "Select an NFS folder to mount:"
+echo "Select an NFS folder to mount:" >& /dev/tty
+# Redirect the select loop to /dev/tty to ensure interactive input works.
 select FOLDER in "${OPTIONS[@]}"; do
   if [[ -n "$FOLDER" ]]; then
     if [[ "$FOLDER" == "Custom" ]]; then
@@ -16,9 +15,9 @@ select FOLDER in "${OPTIONS[@]}"; do
     fi
     break
   else
-    echo "Invalid selection. Try again." > /dev/tty
+    echo "Invalid selection. Try again." >& /dev/tty
   fi
-done
+done < /dev/tty
 
 FOLDER_NAME="${FOLDER,,}"
 NFS_SERVER="192.168.0.237:/Volume1/$FOLDER"
