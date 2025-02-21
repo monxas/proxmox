@@ -15,4 +15,11 @@ apt-get install -y parted
   echo "quit"
 } | parted /dev/sda
 
-reboot
+echo "New partition table (parted /dev/sda print):"
+parted /dev/sda print
+
+echo "Block devices (lsblk):"
+lsblk
+
+echo "Filesystem usage (df -h):"
+df -h
