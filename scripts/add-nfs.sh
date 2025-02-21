@@ -1,13 +1,12 @@
 # one liner 
 # curl -sSL https://raw.githubusercontent.com/monxas/proxmox/develop/scripts/add-nfs.sh | bash
-
 #!/bin/bash
 
 # Predefined folder options
-OPTIONS=(Media Matematico backup nexus Custom)
+OPTIONS=("Media" "Matematico" "backup" "nexus" "Custom")
 
 # Prompt user to select a folder
-PS3="Select an NFS folder to mount: "
+echo "Select an NFS folder to mount:"
 select FOLDER in "${OPTIONS[@]}"; do
   if [[ -n "$FOLDER" ]]; then
     if [[ "$FOLDER" == "Custom" ]]; then
@@ -19,9 +18,12 @@ select FOLDER in "${OPTIONS[@]}"; do
   fi
 done
 
+# Convert folder name to lowercase for local mount point
+FOLDER_NAME="${FOLDER,,}"
+
 # Define server and local mount point
 NFS_SERVER="192.168.0.237:/Volume1/$FOLDER"
-MOUNT_POINT="/mnt/nfs_${FOLDER,,}"  # Convert to lowercase
+MOUNT_POINT="/mnt/nfs_$FOLDER_NAME"
 
 # Update package list and install NFS utilities
 sudo apt update && sudo apt install -y nfs-common
@@ -30,8 +32,9 @@ sudo apt update && sudo apt install -y nfs-common
 sudo mkdir -p "$MOUNT_POINT"
 
 # Add the NFS mount entry to /etc/fstab if it doesn't already exist
-grep -qxF "$NFS_SERVER $MOUNT_POINT nfs rw,relatime,vers=4.1,nofail 0 0" /etc/fstab || \
+if ! grep -qxF "$NFS_SERVER $MOUNT_POINT nfs rw,relatime,vers=4.1,nofail 0 0" /etc/fstab; then
   echo "$NFS_SERVER $MOUNT_POINT nfs rw,relatime,vers=4.1,nofail 0 0" | sudo tee -a /etc/fstab
+fi
 
 # Reload systemd to recognize changes in /etc/fstab
 sudo systemctl daemon-reload
