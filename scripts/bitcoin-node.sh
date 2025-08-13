@@ -1,10 +1,10 @@
+#!/usr/bin/env bash
 # one liner:
 # curl -fsSL https://raw.githubusercontent.com/monxas/proxmox/develop/scripts/bitcoin-node.sh | sudo bash
 
-#!/usr/bin/env bash
 # Install & configure a Bitcoin Core full node on Ubuntu Server
-# Data directory: /mnt/nfs_bitcoin (NFS mount strongly recommended to be reliable & fast; SSD-local is safer)
 set -euo pipefail
+
 
 # --- CONFIG ---
 BITCOIN_USER="bitcoin"
