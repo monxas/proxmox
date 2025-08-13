@@ -1,6 +1,7 @@
-# one liner 
-# curl -sSL https://raw.githubusercontent.com/monxas/proxmox/develop/scripts/bitcoin-node.sh | bash
-#!/bin/bash
+# one liner:
+# curl -fsSL https://raw.githubusercontent.com/monxas/proxmox/develop/scripts/bitcoin-node.sh | sudo bash
+
+#!/usr/bin/env bash
 # Install & configure a Bitcoin Core full node on Ubuntu Server
 # Data directory: /mnt/nfs_bitcoin (NFS mount strongly recommended to be reliable & fast; SSD-local is safer)
 set -euo pipefail
@@ -16,6 +17,7 @@ PRUNE="0"            # set >0 (e.g. 550) to prune in GiB; keep 0 for full node
 MAXCONN="64"
 DBCACHE="700"        # tune based on RAM
 # ---------------
+
 
 if [[ $EUID -ne 0 ]]; then echo "Please run as root (sudo)." >&2; exit 1; fi
 
